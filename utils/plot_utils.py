@@ -147,7 +147,7 @@ def plot_layer_ax_input(obj, model_name, savedir, layer_name, show_legend=True):
         )
         leg.get_frame().set_edgecolor('silver')
         leg.get_frame().set_linewidth(1.0)
-    plt.savefig(os.path.join(savedir,f"{model_name}-{layer_name}.png"), bbox_inches="tight", dpi=200)
+    plt.savefig(os.path.join(savedir,f"{model_name}-{layer_name}__ax_input.png"), bbox_inches="tight", dpi=200)
 
 def plot_combined_layer_ax_input(objs, model_name, savedir, layer_names, show_legend=True):
     fig, axs = plt.subplots(nrows=1, ncols=len(layer_names), figsize=(28, 4.5))
@@ -165,8 +165,8 @@ def plot_combined_layer_ax_input(objs, model_name, savedir, layer_names, show_le
     if show_legend:
         fig.legend(handles, labels, loc='upper center', ncol=5, fancybox=True, prop={'size': 22}, bbox_to_anchor=(0.5, 1.23))
 
-    plt.savefig(os.path.join(savedir, f"{model_name}-combined.png"), bbox_inches="tight", dpi=600)
-    plt.savefig(os.path.join(savedir, f"{model_name}-combined.pdf"), bbox_inches="tight", dpi=600)
+    plt.savefig(os.path.join(savedir, f"{model_name}__combined_ax_input.png"), bbox_inches="tight", dpi=600)
+    plt.savefig(os.path.join(savedir, f"{model_name}__combined_ax_input.pdf"), bbox_inches="tight", dpi=600)
     plt.close(fig)
     
 def plot_layer_ax_output_sub(ax, mean, model_name, layer_name, show_ylabel=True):
@@ -236,7 +236,7 @@ def plot_layer_ax_output(obj, model_name, savedir, layer_name, show_legend=True)
         )
         leg.get_frame().set_edgecolor('silver')
         leg.get_frame().set_linewidth(1.0)
-    plt.savefig(os.path.join(savedir,f"{model_name}-{layer_name}.png"), bbox_inches="tight", dpi=600)
+    plt.savefig(os.path.join(savedir,f"{model_name}-{layer_name}__ax_output.png"), bbox_inches="tight", dpi=600)
 
 def plot_combined_layer_ax_output(objs, model_name, savedir, layer_names, show_legend=True):
     fig, axs = plt.subplots(nrows=1, ncols=len(layer_names), figsize=(21, 4.5))
@@ -254,8 +254,8 @@ def plot_combined_layer_ax_output(objs, model_name, savedir, layer_names, show_l
     if show_legend:
         fig.legend(handles, labels, loc='upper center', ncol=5, fancybox=True, prop={'size': 22}, bbox_to_anchor=(0.5, 1.23))    
 
-    plt.savefig(os.path.join(savedir,f"{model_name}-combined.png"), bbox_inches="tight", dpi=600)
-    plt.savefig(os.path.join(savedir,f"{model_name}-combined.pdf"), bbox_inches="tight", dpi=600)
+    plt.savefig(os.path.join(savedir,f"{model_name}_combined_ax_output.png"), bbox_inches="tight", dpi=600)
+    plt.savefig(os.path.join(savedir,f"{model_name}_combined_ax_output.pdf"), bbox_inches="tight", dpi=600)
 
 def plot_layer_outlier_token_num_sub(ax, mean, model_name):
     colors = ["cornflowerblue", "mediumseagreen", "C4", "teal",  "dimgrey", "gold"]
@@ -290,7 +290,7 @@ def plot_layer_outlier_token_num(obj, model_name, savedir):
     mean = np.mean(obj,axis=0)
     plot_layer_outlier_token_num_sub(axs, mean, model_name)
 
-    plt.savefig(os.path.join(savedir,f"{model_name}.png"), bbox_inches="tight", dpi=200)
+    plt.savefig(os.path.join(savedir,f"{model_name}__outlier_token_num.png"), bbox_inches="tight", dpi=200)
     
 def plot_outlier_token_position_sub(ax, labels, values, model_name):
     colors = ["cornflowerblue", "mediumseagreen", "C4", "teal",  "dimgrey", "gold"]
@@ -345,8 +345,8 @@ def plot_outlier_token_position(obj, model_name, savedir):
     values = list(sorted_percentages.values())
     
     plot_outlier_token_position_sub(axs, labels, values, model_name)
-    plt.savefig(os.path.join(savedir,f"{model_name}.png"), bbox_inches="tight", dpi=200)
-    plt.savefig(os.path.join(savedir,f"{model_name}.pdf"), bbox_inches="tight", dpi=200)
+    plt.savefig(os.path.join(savedir,f"{model_name}__outlier_token_position.png"), bbox_inches="tight", dpi=200)
+    plt.savefig(os.path.join(savedir,f"{model_name}__outlier_token_position.pdf"), bbox_inches="tight", dpi=200)
 
 def plot_outlier_token_number(obj, model_name, savedir):
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(7.5, 4.5))
@@ -363,8 +363,8 @@ def plot_outlier_token_number(obj, model_name, savedir):
     values = list(sorted_percentages.values())
     
     plot_outlier_token_number_sub(axs, labels, values, model_name)
-    plt.savefig(os.path.join(savedir,f"{model_name}.png"), bbox_inches="tight", dpi=200)
-    plt.savefig(os.path.join(savedir,f"{model_name}.pdf"), bbox_inches="tight", dpi=200)
+    plt.savefig(os.path.join(savedir,f"{model_name}__outlier_token_number.png"), bbox_inches="tight", dpi=200)
+    plt.savefig(os.path.join(savedir,f"{model_name}__outlier_token_number.pdf"), bbox_inches="tight", dpi=200)
 
 def plot_outlier_token_sub(ax, labels, values, model_name):
     colors = ["cornflowerblue", "mediumseagreen", "C4", "teal",  "dimgrey", "gold"]
@@ -400,8 +400,8 @@ def plot_outlier_token(obj, model_name, savedir):
     values = list(sorted_percentages.values())
     
     plot_outlier_token_sub(axs, labels, values, model_name)
-    plt.savefig(os.path.join(savedir,f"{model_name}.png"), bbox_inches="tight", dpi=200)
-    plt.savefig(os.path.join(savedir,f"{model_name}.pdf"), bbox_inches="tight", dpi=200)
+    plt.savefig(os.path.join(savedir,f"{model_name}__outlier_token.png"), bbox_inches="tight", dpi=200)
+    plt.savefig(os.path.join(savedir,f"{model_name}__outlier_token.pdf"), bbox_inches="tight", dpi=200)
 
 def plot_outlier_token_test(obj, model_name, savedir):
     fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(7.5, 4.5))
@@ -418,4 +418,4 @@ def plot_outlier_token_test(obj, model_name, savedir):
     values = list(sorted_percentages.values())
     
     plot_outlier_token_sub(axs, labels, values, model_name)
-    plt.savefig(os.path.join(savedir,f"{model_name}_test.png"), bbox_inches="tight", dpi=200)
+    plt.savefig(os.path.join(savedir,f"{model_name}__outlier_token_test.png"), bbox_inches="tight", dpi=200)
