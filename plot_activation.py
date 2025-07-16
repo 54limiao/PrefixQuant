@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import os
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, Qwen2_5_VLForConditionalGeneration
 import os
 from utils.data_utils import get_loaders
 import argparse
@@ -21,7 +21,11 @@ from utils.quant_utils import wrap_to_quant_model, register_online_had
 def build_model_and_tokenizer(model_name):
     kwargs = {"torch_dtype": torch.float16, "device_map": "cpu"}
     tokenizer = AutoTokenizer.from_pretrained(model_name,trust_remote_code=True,add_bos_token=False)
-    model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True,**kwargs)
+    if model_name.__contains__('Qwen2.5-VL'):
+        model = Qwen2_5_VLForConditionalGeneration.from_pretrained(model_name, trust_remote_code=True, **kwargs)
+    else:
+        model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True,**kwargs)
+    
     return model, tokenizer
 
 def parse_args():
@@ -100,6 +104,14 @@ if args.pre_rotate:
     rotation_utils.fuse_layer_norms(model)
     rotation_utils.rotate_model(model, rotate_mode="hadamard", online=args.down_online_had)
     model.half()
+
+# # check rotation result model
+# if args.model_name == 'qwen2.5-vl-7b-instruct':
+#     test_prompt = "What is the capital of France?"
+#     inputs = tokenizer(test_prompt, return_tensors="pt").to('cpu')
+#     outputs = model.generate(**inputs, max_new_tokens=50)
+#     print("After Rotate: Test response:", tokenizer.decode(outputs[0], skip_special_tokens=True))
+
 wrap_to_quant_model(model)
 if args.pre_rotate and args.down_online_had:
     register_online_had(model)
@@ -133,7 +145,7 @@ if args.set_prefixed_tokens:
     from utils.stat_utils import get_prefixed_tokens
     if model.device.type == 'cpu':
         original_device = 'cpu'
-        block_class_name = model.model.layers[0].__class__.__name__
+        block_class_name = model_utils.get_layers(model)[0].__class__.__name__
         device_map = infer_auto_device_map(model, max_memory={i: args.max_memory for i in range(torch.cuda.device_count())}, no_split_module_classes=[block_class_name])
         model = dispatch_model(model, device_map=device_map)
     else:
@@ -148,7 +160,7 @@ if args.set_prefixed_tokens:
 
 
 # step 3: prepare the model, data dist and hook
-block_class_name = model.model.layers[0].__class__.__name__
+block_class_name = model_utils.get_layers(model)[0].__class__.__name__
 device_map = infer_auto_device_map(model, max_memory={i: args.max_memory for i in range(torch.cuda.device_count())}, no_split_module_classes=[block_class_name])
 model = dispatch_model(model, device_map=device_map)
 os.makedirs(args.save_dir, exist_ok=True)
