@@ -2,6 +2,7 @@
 import torch
 import numpy as np
 from collections import Counter
+import utils.model_utils as model_utils
 
 @torch.no_grad()
 def stat_layer_wise_magnitude_input(dataloader, activation_dict, model, layer_name,prefixed_tokens):
@@ -17,7 +18,7 @@ def stat_layer_wise_magnitude_input(dataloader, activation_dict, model, layer_na
             data = torch.cat([torch.tensor([prefixed_tokens]),data],dim=1)
         with torch.no_grad():
             model(data.to('cuda'))
-        num_layers = len(model.model.layers)
+        num_layers = len(model_utils.get_layers(model))
         seq_np = np.zeros((5, num_layers))
         for block_index in range(num_layers):
             if layer_name == 'hidden_state':
@@ -56,7 +57,7 @@ def stat_layer_wise_magnitude_output(dataloader, activation_dict, model, layer_n
             data = torch.cat([torch.tensor([prefixed_tokens]),data],dim=1)
         with torch.no_grad():
             model(data.to('cuda'))
-        num_layers = len(model.model.layers)
+        num_layers = len(model_utils.get_layers(model))
         seq_np = np.zeros((5, num_layers))
         for block_index in range(num_layers):
             if layer_name == 'hidden_state':
@@ -94,7 +95,7 @@ def stat_layer_wise_outlier_token_number(dataloader, output_activation, model, o
         data = dataloader[i][0]
         with torch.no_grad():
             model(data.to('cuda'))
-        num_layers = len(model.model.layers)
+        num_layers = len(model_utils.get_layers(model))
         seq_np = np.zeros((1, num_layers))
         for block_index in range(num_layers):
             if outlier_object == 'hidden_state':
@@ -128,7 +129,7 @@ def stat_outlier_token_position(dataloader, output_activation, model, prefixed_t
             data = torch.cat([torch.tensor([prefixed_tokens]),data],dim=1)
         with torch.no_grad():
             model(data.to('cuda'))
-        num_layers = len(model.model.layers)
+        num_layers = len(model_utils.get_layers(model))
         for block_index in range(num_layers):
             if outlier_object == 'hidden_state':
                 entire_name = f'model.layers.{block_index}'
@@ -153,7 +154,7 @@ def stat_outlier_token(dataloader, output_activation, model, tokenizer=None, dec
         data = dataloader[i][0]
         with torch.no_grad():
             model(data.to('cuda'))
-        num_layers = len(model.model.layers)
+        num_layers = len(model_utils.get_layers(model))
         for block_index in range(num_layers):
             if outlier_object == 'hidden_state':
                 entire_name = f'model.layers.{block_index}'
@@ -212,17 +213,17 @@ def get_nrom_and_decoder_class(model_family, model):
         norm_class = Gemma2RMSNorm
         decoder_class = Gemma2DecoderLayer
     elif model_family == 'internlm':
-        norm_class = model.model.layers[0].attention_norm.__class__
-        decoder_class = model.model.layers[0].__class__
+        norm_class = model_utils.get_layers(model)[0].attention_norm.__class__
+        decoder_class = model_utils.get_layers(model)[0].__class__
     elif model_family == 'phi':
-        norm_class = model.model.layers[0].input_layernorm.__class__
-        decoder_class = model.model.layers[0].__class__
+        norm_class = model_utils.get_layers(model)[0].input_layernorm.__class__
+        decoder_class = model_utils.get_layers(model)[0].__class__
     else:
         raise NotImplementedError
     return norm_class, decoder_class
 
 def get_down_proj_name(model_family):
-    if model_family in ['llama', 'qwen', 'mistral', 'phi']:
+    if model_family in ['llama', 'qwen', 'mistral', 'phi', 'qwen2.5']:
         name = 'down_proj'
     elif model_family == 'internlm':
         name = 'w2'
