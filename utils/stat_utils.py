@@ -199,6 +199,10 @@ def get_nrom_and_decoder_class(model_family, model):
         from transformers.models.qwen2.modeling_qwen2 import Qwen2RMSNorm,Qwen2DecoderLayer
         norm_class = Qwen2RMSNorm
         decoder_class = Qwen2DecoderLayer
+    elif model_family == 'qwen2.5':
+        from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import Qwen2RMSNorm,Qwen2_5_VLDecoderLayer
+        norm_class = Qwen2RMSNorm
+        decoder_class = Qwen2_5_VLDecoderLayer
     elif model_family == 'mistral':
         from transformers.models.mistral.modeling_mistral import MistralRMSNorm,MistralDecoderLayer
         norm_class = MistralRMSNorm

@@ -11,16 +11,57 @@ MODEL_TITLE_DICT={"llama-2-7b": "LLaMA-2-7B", "mistral-7b": "Mistral-7B",
         "llama-3-8b-instruct": "LLaMA-3-8B-Instruct","llama-3-70b-instruct": "LLaMA-3-70B-Instruct",
         "qwen-2-7b": "Qwen-2-7B","internlm-2.5-7b":"InternLM-2.5-7B", "phi-3-medium-instruct":"Phi-3-Medium-Instruct",
         "mistral-7b-v0.3":"Mistral-7B-V0.3","dclm-7b":"DCLM-7B", "llama-3.1-8b": "LLaMA-3.1-8B",
-        "gemma-2-9b":"Gemma-2-9B"}
+        "gemma-2-9b":"Gemma-2-9B", "qwen2.5-vl-7b-instruct":"Qwen2.5-VL-7B-Instruct"}
 
 def plot_3D_tensor(layer_name, tensor, name):
     print(f"drawing {layer_name}")
-    fig = plt.figure()
+    
+    # Calculate statistics
+    tensor_np = tensor.cpu().numpy()
+    mean_val = np.mean(tensor_np)
+    std_val = np.std(tensor_np)
+    p99_val = np.percentile(tensor_np, 99)
+    max_val = np.max(tensor_np)
+    min_val = np.min(tensor_np)
+    
+    # Count outliers (values > 3 standard deviations from mean)
+    outlier_threshold = mean_val + 3 * std_val
+    outliers = np.sum(tensor_np > outlier_threshold)
+    outlier_percentage = (outliers / tensor_np.size) * 100
+    
+    fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection='3d')
     X = np.arange(tensor.shape[1])
     Y = np.arange(tensor.shape[0])
     X, Y = np.meshgrid(X, Y)
-    ax.plot_surface(X, Y,  tensor.cpu(), cmap='coolwarm', antialiased=False, shade=True, linewidth=0.5,rstride=1,cstride=1)
+    
+
+    rstride = max(1, tensor.shape[0] // 100)
+    cstride = max(1, tensor.shape[1] // 100)
+    
+    ax.plot_surface(X, Y, tensor.cpu(), cmap='coolwarm', antialiased=False, shade=True, linewidth=0.5, rstride=rstride, cstride=cstride)
+    
+    # Add statistics text to the plot
+    ratio_max_p99 = max_val / p99_val if p99_val != 0 else float('inf')
+    ratio_color = 'red' if ratio_max_p99 > 64 else 'green'
+    
+    stats_text = f"Shape: {tensor.shape}\n"
+    stats_text += f"Mean: {mean_val:.3f}, Std: {std_val:.3f}\n"
+    stats_text += f"Min: {min_val:.3f}, Max: {max_val:.3f}\n"
+    stats_text += f"P99: {p99_val:.3f}\n"
+    stats_text += f"Outliers (>3σ): {outliers} ({outlier_percentage:.1f}%)"
+    
+    # Position main statistics text in upper left corner
+    ax.text2D(0.02, 0.98, stats_text, transform=ax.transAxes, 
+              verticalalignment='top', fontsize=10, 
+              bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+    
+    # Add prominent max/p99 ratio display
+    ratio_text = f"Max/P99: {ratio_max_p99:.1f}"
+    ax.text2D(0.02, 0.20, ratio_text, transform=ax.transAxes, 
+              verticalalignment='top', fontsize=16, color=ratio_color, fontweight='bold',
+              bbox=dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor=ratio_color, linewidth=2))
+    
     plt.tight_layout()
     
     ax.set_xlabel('Channel', fontsize=14)
@@ -34,6 +75,7 @@ def plot_3D_tensor(layer_name, tensor, name):
     plt.tight_layout(pad=0.1)
     plt.savefig(f'{name}', dpi=600, bbox_inches='tight', pad_inches=0)
     plt.close()
+    print(f"  Saved: {name}")
 
 def plot_layer_ax_input_sub(ax, mean, model_name, layer_name, show_ylabel=True):
     colors = ["cornflowerblue", "mediumseagreen", "C4", "teal",  "dimgrey", "gold"]

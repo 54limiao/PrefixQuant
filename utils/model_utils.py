@@ -22,6 +22,7 @@ MISTRAL_NORM = transformers.models.mistral.modeling_mistral.MistralRMSNorm
 QWEN2_MODEL = transformers.models.qwen2.modeling_qwen2.Qwen2ForCausalLM
 QWEN2_LAYER = transformers.models.qwen2.modeling_qwen2.Qwen2DecoderLayer
 QWEN2_NORM = transformers.models.qwen2.modeling_qwen2.Qwen2RMSNorm
+QWEN2_5_VL_MODEL = transformers.models.qwen2_5_vl.modeling_qwen2_5_vl.Qwen2_5_VLForConditionalGeneration
 INTERNLM2_MODEL = None
 INTERNLM2_LAYER = None
 INTERNLM2_NORM = None
@@ -37,6 +38,8 @@ def model_type_extractor(model):
         return MISTRAL_MODEL
     elif isinstance(model, QWEN2_MODEL):
         return QWEN2_MODEL
+    elif isinstance(model, QWEN2_5_VL_MODEL):
+        return QWEN2_5_VL_MODEL
     elif model.config.architectures[0] == 'InternLM2ForCausalLM':
         global INTERNLM2_MODEL,INTERNLM2_LAYER,INTERNLM2_NORM
         INTERNLM2_MODEL = model.__class__
@@ -53,6 +56,8 @@ def skip(*args, **kwargs):
 def get_rope_function_name(model):
     if isinstance(model, (LLAMA_MODEL, MISTRAL_MODEL, QWEN2_MODEL)):
         return "apply_rotary_pos_emb"
+    elif isinstance(model, QWEN2_5_VL_MODEL):
+        return "apply_multimodal_rotary_pos_emb"
     raise NotImplementedError
 
 
@@ -65,6 +70,8 @@ def get_layers(model):
         return model.model.layers
     if isinstance(model, QWEN2_MODEL):
         return model.model.layers
+    if isinstance(model, QWEN2_5_VL_MODEL):
+        return model.language_model.layers
     if isinstance(model, INTERNLM2_MODEL):
         return model.model.layers
     raise NotImplementedError
@@ -114,6 +121,8 @@ def get_model_type(model):
         return MISTRAL_MODEL
     elif isinstance(model, QWEN2_MODEL):
         return QWEN2_MODEL
+    elif isinstance(model, QWEN2_5_VL_MODEL):
+        return QWEN2_5_VL_MODEL
     else:
         raise ValueError(f'Unknown model type {model}')
 
@@ -126,6 +135,8 @@ def get_norm_type(model):
         return MISTRAL_NORM
     elif isinstance(model, QWEN2_MODEL):
         return QWEN2_NORM
+    elif isinstance(model, QWEN2_5_VL_MODEL):
+        return transformers.models.qwen2_5_vl.modeling_qwen2_5_vl.Qwen2RMSNorm
     elif isinstance(model, INTERNLM2_MODEL):
         return INTERNLM2_NORM
     else:
@@ -137,6 +148,8 @@ def get_norm_type(model):
 def get_embeddings(model, model_type):
     if model_type == LLAMA_MODEL or model_type == MISTRAL_MODEL or model_type == QWEN2_MODEL:
         return [model.model.embed_tokens]
+    elif model_type == QWEN2_5_VL_MODEL:
+        return [model.language_model.embed_tokens]
     elif model_type == INTERNLM2_MODEL:
         return [model.model.tok_embeddings]
     elif model_type == OPT_MODEL:
@@ -148,6 +161,8 @@ def get_embeddings(model, model_type):
 def get_transformer_layers(model, model_type):
     if model_type == LLAMA_MODEL or model_type == MISTRAL_MODEL or model_type == QWEN2_MODEL or model_type == INTERNLM2_MODEL:
         return [layer for layer in model.model.layers]
+    elif model_type == QWEN2_5_VL_MODEL:
+        return [layer for layer in model.language_model.layers]
     elif model_type == OPT_MODEL:
         return [layer for layer in model.model.decoder.layers]
     else:
@@ -156,7 +171,7 @@ def get_transformer_layers(model, model_type):
 
 
 def get_lm_head(model, model_type):
-    if model_type == LLAMA_MODEL or model_type == MISTRAL_MODEL or model_type == QWEN2_MODEL:
+    if model_type == LLAMA_MODEL or model_type == MISTRAL_MODEL or model_type == QWEN2_MODEL or model_type == QWEN2_5_VL_MODEL:
         return model.lm_head
     elif model_type == OPT_MODEL:
         return model.lm_head
@@ -174,6 +189,10 @@ def get_pre_head_layernorm(model, model_type):
         pre_head_layernorm = model.model.norm
         assert isinstance(pre_head_layernorm,
                           QWEN2_NORM)
+    elif model_type == QWEN2_5_VL_MODEL:
+        pre_head_layernorm = model.language_model.norm
+        # assert isinstance(pre_head_layernorm,
+        #                   QWEN2_NORM)
     elif model_type == MISTRAL_MODEL:
         pre_head_layernorm = model.model.norm
         assert isinstance(pre_head_layernorm,
