@@ -194,8 +194,8 @@ if args.plot_linear_input:
 
 # step 4.2: plot the token-wise output magnitude 
 if args.plot_linear_output:
-    # layer_names = ['q_proj', 'k_proj', 'v_proj'] # plot Q/K/V, Q/K are pre repe 
-    layer_names = ['apply_rotary_pos_emb_qk_rotation_wrapper.Q', 'apply_rotary_pos_emb_qk_rotation_wrapper.K', 'v_proj']
+    layer_names = ['q_proj', 'k_proj', 'v_proj', 'o_proj', 'up_proj', 'down_proj', 'gate_proj'] # plot Q/K/V, Q/K are pre repe 
+    # layer_names = ['apply_rotary_pos_emb_qk_rotation_wrapper.Q', 'apply_rotary_pos_emb_qk_rotation_wrapper.K', 'v_proj']
     stats = []
     for layer_name in layer_names:
         stats.append(stat_layer_wise_magnitude_output(dataloader, input_activation, model, layer_name, prefixed_tokens))

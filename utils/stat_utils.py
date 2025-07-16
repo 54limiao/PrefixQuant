@@ -6,6 +6,31 @@ import utils.model_utils as model_utils
 import transformers
 QWEN2_5_VL_MODEL = transformers.models.qwen2_5_vl.modeling_qwen2_5_vl.Qwen2_5_VLForConditionalGeneration
 
+def get_entire_name_by_layer_name(layer_name, block_index, model=None):
+    if layer_name == 'hidden_state':
+        entire_name = f'model.layers.{block_index}'
+    elif layer_name == 'down_proj':
+        entire_name = f'model.layers.{block_index}.mlp.down_proj'
+    elif layer_name == 'up_proj':
+        entire_name = f'model.layers.{block_index}.mlp.up_proj'
+    elif layer_name == 'gate_proj':
+        entire_name = f'model.layers.{block_index}.mlp.gate_proj'
+    elif layer_name == 'q_proj':
+        entire_name = f'model.layers.{block_index}.self_attn.q_proj'
+    elif layer_name == 'k_proj':
+        entire_name = f'model.layers.{block_index}.self_attn.k_proj'
+    elif layer_name == 'v_proj':
+        entire_name = f'model.layers.{block_index}.self_attn.v_proj'
+    elif layer_name == 'o_proj':
+        entire_name = f'model.layers.{block_index}.self_attn.o_proj'
+    elif 'apply_rotary_pos_emb_qk_rotation_wrapper' in layer_name:
+        entire_name = f'model.layers.{block_index}.self_attn.{layer_name}'
+    else:
+        raise NotImplementedError
+    if isinstance(model, QWEN2_5_VL_MODEL):
+        entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
+    return entire_name
+
 @torch.no_grad()
 def stat_layer_wise_magnitude_input(dataloader, activation_dict, model, layer_name,prefixed_tokens):
     '''
@@ -23,20 +48,21 @@ def stat_layer_wise_magnitude_input(dataloader, activation_dict, model, layer_na
         num_layers = len(model_utils.get_layers(model))
         seq_np = np.zeros((5, num_layers))
         for block_index in range(num_layers):
-            if layer_name == 'hidden_state':
-                entire_name = f'model.layers.{block_index}'
-            elif layer_name == 'down_proj':
-                entire_name = f'model.layers.{block_index}.mlp.down_proj'
-            elif layer_name == 'up_proj':
-                entire_name = f'model.layers.{block_index}.mlp.up_proj'
-            elif layer_name == 'q_proj':
-                entire_name = f'model.layers.{block_index}.self_attn.q_proj'
-            elif layer_name == 'o_proj':
-                entire_name = f'model.layers.{block_index}.self_attn.o_proj'
-            else:
-                raise NotImplementedError
-            if isinstance(model, QWEN2_5_VL_MODEL):
-                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
+            entire_name = get_entire_name_by_layer_name(layer_name, block_index, model)
+            # if layer_name == 'hidden_state':
+            #     entire_name = f'model.layers.{block_index}'
+            # elif layer_name == 'down_proj':
+            #     entire_name = f'model.layers.{block_index}.mlp.down_proj'
+            # elif layer_name == 'up_proj':
+            #     entire_name = f'model.layers.{block_index}.mlp.up_proj'
+            # elif layer_name == 'q_proj':
+            #     entire_name = f'model.layers.{block_index}.self_attn.q_proj'
+            # elif layer_name == 'o_proj':
+            #     entire_name = f'model.layers.{block_index}.self_attn.o_proj'
+            # else:
+            #     raise NotImplementedError
+            # if isinstance(model, QWEN2_5_VL_MODEL):
+            #     entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = activation_dict[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=True)
@@ -64,26 +90,27 @@ def stat_layer_wise_magnitude_output(dataloader, activation_dict, model, layer_n
         num_layers = len(model_utils.get_layers(model))
         seq_np = np.zeros((5, num_layers))
         for block_index in range(num_layers):
-            if layer_name == 'hidden_state':
-                entire_name = f'model.layers.{block_index}'
-            elif layer_name == 'down_proj':
-                entire_name = f'model.layers.{block_index}.mlp.down_proj'
-            elif layer_name == 'up_proj':
-                entire_name = f'model.layers.{block_index}.mlp.up_proj'
-            elif layer_name == 'q_proj':
-                entire_name = f'model.layers.{block_index}.self_attn.q_proj'
-            elif layer_name == 'k_proj':
-                entire_name = f'model.layers.{block_index}.self_attn.k_proj'
-            elif layer_name == 'v_proj':
-                entire_name = f'model.layers.{block_index}.self_attn.v_proj'
-            elif layer_name == 'o_proj':
-                entire_name = f'model.layers.{block_index}.self_attn.o_proj'
-            elif 'apply_rotary_pos_emb_qk_rotation_wrapper' in layer_name:
-                entire_name = f'model.layers.{block_index}.self_attn.{layer_name}'
-            else:
-                raise NotImplementedError
-            if isinstance(model, QWEN2_5_VL_MODEL):
-                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
+            entire_name = get_entire_name_by_layer_name(layer_name, block_index, model)
+            # if layer_name == 'hidden_state':
+            #     entire_name = f'model.layers.{block_index}'
+            # elif layer_name == 'down_proj':
+            #     entire_name = f'model.layers.{block_index}.mlp.down_proj'
+            # elif layer_name == 'up_proj':
+            #     entire_name = f'model.layers.{block_index}.mlp.up_proj'
+            # elif layer_name == 'q_proj':
+            #     entire_name = f'model.layers.{block_index}.self_attn.q_proj'
+            # elif layer_name == 'k_proj':
+            #     entire_name = f'model.layers.{block_index}.self_attn.k_proj'
+            # elif layer_name == 'v_proj':
+            #     entire_name = f'model.layers.{block_index}.self_attn.v_proj'
+            # elif layer_name == 'o_proj':
+            #     entire_name = f'model.layers.{block_index}.self_attn.o_proj'
+            # elif 'apply_rotary_pos_emb_qk_rotation_wrapper' in layer_name:
+            #     entire_name = f'model.layers.{block_index}.self_attn.{layer_name}'
+            # else:
+            #     raise NotImplementedError
+            # if isinstance(model, QWEN2_5_VL_MODEL):
+            #     entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = activation_dict[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=False)
@@ -104,14 +131,15 @@ def stat_layer_wise_outlier_token_number(dataloader, output_activation, model, o
         num_layers = len(model_utils.get_layers(model))
         seq_np = np.zeros((1, num_layers))
         for block_index in range(num_layers):
-            if outlier_object == 'hidden_state':
-                entire_name = f'model.layers.{block_index}'
-            elif outlier_object == 'down_proj':
-                entire_name = f'model.layers.{block_index}.mlp.down_proj'
-            else:
-                raise NotImplementedError
-            if isinstance(model, QWEN2_5_VL_MODEL):
-                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
+            entire_name = get_entire_name_by_layer_name(outlier_object, block_index, model)
+            # if outlier_object == 'hidden_state':
+            #     entire_name = f'model.layers.{block_index}'
+            # elif outlier_object == 'down_proj':
+            #     entire_name = f'model.layers.{block_index}.mlp.down_proj'
+            # else:
+            #     raise NotImplementedError
+            # if isinstance(model, QWEN2_5_VL_MODEL):
+            #     entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = output_activation[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=True)
@@ -139,14 +167,15 @@ def stat_outlier_token_position(dataloader, output_activation, model, prefixed_t
             model(data.to('cuda'))
         num_layers = len(model_utils.get_layers(model))
         for block_index in range(num_layers):
-            if outlier_object == 'hidden_state':
-                entire_name = f'model.layers.{block_index}'
-            elif outlier_object == 'down_proj':
-                entire_name = f'model.layers.{block_index}.mlp.down_proj'
-            else:
-                raise NotImplementedError
-            if isinstance(model, QWEN2_5_VL_MODEL):
-                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
+            entire_name = get_entire_name_by_layer_name(outlier_object, block_index, model)
+            # if outlier_object == 'hidden_state':
+            #     entire_name = f'model.layers.{block_index}'
+            # elif outlier_object == 'down_proj':
+            #     entire_name = f'model.layers.{block_index}.mlp.down_proj'
+            # else:
+            #     raise NotImplementedError
+            # if isinstance(model, QWEN2_5_VL_MODEL):
+            #     entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = output_activation[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=True)
@@ -166,14 +195,15 @@ def stat_outlier_token(dataloader, output_activation, model, tokenizer=None, dec
             model(data.to('cuda'))
         num_layers = len(model_utils.get_layers(model))
         for block_index in range(num_layers):
-            if outlier_object == 'hidden_state':
-                entire_name = f'model.layers.{block_index}'
-            elif outlier_object == 'down_proj':
-                entire_name = f'model.layers.{block_index}.mlp.down_proj'
-            else:
-                raise NotImplementedError
-            if isinstance(model, QWEN2_5_VL_MODEL):
-                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
+            entire_name = get_entire_name_by_layer_name(outlier_object, block_index, model)
+            # if outlier_object == 'hidden_state':
+            #     entire_name = f'model.layers.{block_index}'
+            # elif outlier_object == 'down_proj':
+            #     entire_name = f'model.layers.{block_index}.mlp.down_proj'
+            # else:
+            #     raise NotImplementedError
+            # if isinstance(model, QWEN2_5_VL_MODEL):
+            #     entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = output_activation[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=True)
