@@ -3,6 +3,8 @@ import torch
 import numpy as np
 from collections import Counter
 import utils.model_utils as model_utils
+import transformers
+QWEN2_5_VL_MODEL = transformers.models.qwen2_5_vl.modeling_qwen2_5_vl.Qwen2_5_VLForConditionalGeneration
 
 @torch.no_grad()
 def stat_layer_wise_magnitude_input(dataloader, activation_dict, model, layer_name,prefixed_tokens):
@@ -33,6 +35,8 @@ def stat_layer_wise_magnitude_input(dataloader, activation_dict, model, layer_na
                 entire_name = f'model.layers.{block_index}.self_attn.o_proj'
             else:
                 raise NotImplementedError
+            if isinstance(model, QWEN2_5_VL_MODEL):
+                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = activation_dict[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=True)
@@ -78,6 +82,8 @@ def stat_layer_wise_magnitude_output(dataloader, activation_dict, model, layer_n
                 entire_name = f'model.layers.{block_index}.self_attn.{layer_name}'
             else:
                 raise NotImplementedError
+            if isinstance(model, QWEN2_5_VL_MODEL):
+                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = activation_dict[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=False)
@@ -104,6 +110,8 @@ def stat_layer_wise_outlier_token_number(dataloader, output_activation, model, o
                 entire_name = f'model.layers.{block_index}.mlp.down_proj'
             else:
                 raise NotImplementedError
+            if isinstance(model, QWEN2_5_VL_MODEL):
+                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = output_activation[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=True)
@@ -137,6 +145,8 @@ def stat_outlier_token_position(dataloader, output_activation, model, prefixed_t
                 entire_name = f'model.layers.{block_index}.mlp.down_proj'
             else:
                 raise NotImplementedError
+            if isinstance(model, QWEN2_5_VL_MODEL):
+                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = output_activation[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=True)
@@ -162,6 +172,8 @@ def stat_outlier_token(dataloader, output_activation, model, tokenizer=None, dec
                 entire_name = f'model.layers.{block_index}.mlp.down_proj'
             else:
                 raise NotImplementedError
+            if isinstance(model, QWEN2_5_VL_MODEL):
+                entire_name = entire_name.replace('model.layers', 'model.language_model.layers')
             activation_abs = output_activation[entire_name].abs()
             activation_abs = activation_abs.max(dim=-1).values
             sort_res = torch.sort(activation_abs.flatten(), descending=True)
