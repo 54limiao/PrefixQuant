@@ -210,6 +210,15 @@ def get_loaders(
 @torch.no_grad()
 def test_ppl(args, model, tokenizer,prefixed_key_values=None, datasets=['wikitext2']):
     results = {}
+    
+    # Convert legacy tuple format to Cache object if needed
+    if prefixed_key_values is not None and isinstance(prefixed_key_values, tuple):
+        from transformers.cache_utils import DynamicCache
+        cache = DynamicCache()
+        for layer_idx, (key_states, value_states) in enumerate(prefixed_key_values):
+            cache.update(key_states, value_states, layer_idx)
+        prefixed_key_values = cache
+    
     for dataset in datasets:
         testloader = get_loaders(
             dataset,
